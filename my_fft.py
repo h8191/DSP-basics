@@ -87,9 +87,9 @@ def my_bin_round(x,ROUND):
 
 
 for i00 in range(17,9,-1):
-    #fft_calc_obj = fft_calc(N=(1<<i00), ROUND=None)
+    fft_calc_obj = fft_calc(N=(1<<i00), ROUND=None)
     #fft_calc_obj = fft_calc(N=(1<<i00), ROUND=1) 
-    fft_calc_obj = fft_calc(N=(1<<i00), ROUND='0b11') 
+    #fft_calc_obj = fft_calc(N=(1<<i00), ROUND='0b11') 
     t1 = time.time()
     data = np.sin(2*np.pi*0.1*np.arange(fft_calc_obj.N)) * 120
     fft1 = fft_calc_obj.fft(data[:fft_calc_obj.N])
