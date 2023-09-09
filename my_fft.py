@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Sep  9 14:38:48 2023
+
+@author: harsha pothuganti
+"""
+
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,7 +51,12 @@ class fft_calc(object):
             #print(weight_lookup_ind, i, mask_bf2)
             stage_Weight = self.Wn_arr[weight_lookup_ind]
             if ROUND is not None:
-                stage_Weight = np.round(stage_Weight,ROUND)
+                if isinstance(ROUND, int):
+                    stage_Weight = np.round(stage_Weight,ROUND)
+                elif isinstance(ROUND, str) and ROUND.startswith('0b'):
+                    stage_Weight = my_bin_round(stage_Weight,eval(ROUND))
+                else:
+                    assert False
 
             G  = stage_Input[ mask_bf1]
             H1 = stage_Input[ mask_bf2] * stage_Weight
@@ -55,23 +68,33 @@ class fft_calc(object):
 
         return stage_Output
 
-fft_calc_obj = fft_calc(N=(1<<10))
-data = np.sin(2*np.pi*0.1*np.arange(fft_calc_obj.N)) * 120
-fft1 = fft_calc_obj.fft(data[:fft_calc_obj.N], ROUND=1) 
-fft2 =       np.fft.fft(data[:fft_calc_obj.N])
-fft1 /= len(fft1)
-fft2 /= len(fft2)
-fft_diff = fft1 - fft2
-fft_diff_abs = np.abs(fft_diff)
-print(np.allclose(fft1,fft2),fft_diff_abs.mean(),fft_diff_abs.max(),flush=True)
+def my_bin_round(x,ROUND):
+    #x : integer, ROUND: the number of binary digits that should be left after rounding
+    shift = 1 << ROUND
+    return np.round(x * shift)/shift
+
+
+##manually testing/verifying my_bin_round function
+#for i in range(10):
+#    x = 0b1101_011_101 / 64; y = my_bin_round(x, i); print(i,bin(int(x*64)),bin(int(y*64)),x,y,abs(y-x))
+
+
+for i00 in range(17,9,-1):
+    t1 = time.time()
+    fft_calc_obj = fft_calc(N=(1<<i00))
+    data = np.sin(2*np.pi*0.1*np.arange(fft_calc_obj.N)) * 120
+    fft1 = fft_calc_obj.fft(data[:fft_calc_obj.N], ROUND=None) 
+    #fft1 = fft_calc_obj.fft(data[:fft_calc_obj.N], ROUND=1) 
+    #fft1 = fft_calc_obj.fft(data[:fft_calc_obj.N], ROUND='0b11') 
+    fft2 =       np.fft.fft(data[:fft_calc_obj.N])
+    fft1 /= len(fft1)
+    fft2 /= len(fft2)
+    fft_diff = fft1 - fft2
+    fft_diff_abs = np.abs(fft_diff)
+    print(np.allclose(fft1,fft2),fft_diff_abs.mean(),fft_diff_abs.max(), time.time()-t1, flush=True)
 plt.figure()
 plt.subplot(1,2,1);plt.plot(np.abs(fft1))
 plt.subplot(1,2,2);plt.plot(np.abs(fft2)) 
 plt.show()
 
-#print(fft_calc_obj.lookup_8bit_rev)
-#print(fft_calc_obj.log2N)
-#t1 = time.time()
-#fft_calc_obj.fft(data[:fft_calc_obj.N])
-#print(time.time()-t1)
-##plt.plot(np.abs(np.fft.fft(data))/len(data));plt.show()
+
